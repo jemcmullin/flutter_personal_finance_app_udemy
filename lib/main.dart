@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:personal_expenses_app/widgets/chart.dart';
 
+import './widgets/chart.dart';
 import './widgets/new_transaction.dart';
-import './models/transaction.dart';
 import './widgets/transaction_list.dart';
+import './models/transaction.dart';
 
 void main() {
   runApp(MyApp());
@@ -58,6 +58,8 @@ class _MyHomePageState extends State<MyHomePage> {
         date: DateTime.now()),
   ];
 
+  bool _showChart = true;
+
   List<Transaction> get _recentTransactions {
     return _userTransactions.where((transaction) {
       return transaction.date
@@ -95,22 +97,59 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
+    AppBar currentAppBar = AppBar(
+      title: Text('Personal Expenses'),
+      actions: [
+        IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () => _startAddNewTransaction(context))
+      ],
+    );
+    Widget transactionListWidget = Container(
+        height: (mediaQuery.size.height -
+                mediaQuery.padding.top -
+                currentAppBar.preferredSize.height) *
+            0.75,
+        child: TransactionList(_userTransactions, _removeTransaction));
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Personal Expenses'),
-        actions: [
-          IconButton(
-              icon: Icon(Icons.add),
-              onPressed: () => _startAddNewTransaction(context))
-        ],
-      ),
+      appBar: currentAppBar,
       body: SingleChildScrollView(
         child: Column(
-          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Chart(_recentTransactions),
-            TransactionList(_userTransactions, _removeTransaction),
+            if (isLandscape)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Show Chart'),
+                  Switch(
+                      value: _showChart,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _showChart = newValue;
+                        });
+                      }),
+                ],
+              ),
+            if (!isLandscape)
+              Container(
+                  height: (mediaQuery.size.height -
+                          mediaQuery.padding.top -
+                          currentAppBar.preferredSize.height) *
+                      0.25,
+                  child: Chart(_recentTransactions)),
+            if (!isLandscape) transactionListWidget,
+            if (isLandscape)
+              _showChart
+                  ? Container(
+                      height: (mediaQuery.size.height -
+                              mediaQuery.padding.top -
+                              currentAppBar.preferredSize.height) *
+                          0.6,
+                      child: Chart(_recentTransactions))
+                  : transactionListWidget,
           ],
         ),
       ),
