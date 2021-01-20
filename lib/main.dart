@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import './widgets/chart.dart';
@@ -99,23 +102,30 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final isLandscape = mediaQuery.orientation == Orientation.landscape;
-    AppBar currentAppBar = AppBar(
-      title: Text('Personal Expenses'),
-      actions: [
-        IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _startAddNewTransaction(context))
-      ],
-    );
+    final PreferredSizeWidget currentAppBar = Platform.isIOS
+        ? CupertinoNavigationBar(
+            middle: Text('Personal Expenses'),
+            trailing: CupertinoButton(
+                child: Icon(CupertinoIcons.add),
+                padding: EdgeInsets.zero,
+                onPressed: () => _startAddNewTransaction(context)),
+          )
+        : AppBar(
+            title: Text('Personal Expenses'),
+            actions: [
+              IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: () => _startAddNewTransaction(context))
+            ],
+          );
     Widget transactionListWidget = Container(
         height: (mediaQuery.size.height -
                 mediaQuery.padding.top -
                 currentAppBar.preferredSize.height) *
             0.75,
         child: TransactionList(_userTransactions, _removeTransaction));
-    return Scaffold(
-      appBar: currentAppBar,
-      body: SingleChildScrollView(
+    final Widget homeBodyWidget = SafeArea(
+      child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -123,9 +133,11 @@ class _MyHomePageState extends State<MyHomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Show Chart'),
-                  Switch(
+                  Text('Show Chart',
+                      style: Theme.of(context).textTheme.headline6),
+                  Switch.adaptive(
                       value: _showChart,
+                      activeColor: Theme.of(context).accentColor,
                       onChanged: (newValue) {
                         setState(() {
                           _showChart = newValue;
@@ -153,11 +165,23 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () => _startAddNewTransaction(context),
-      ),
     );
+    return Platform.isIOS
+        ? CupertinoPageScaffold(
+            child: homeBodyWidget,
+            navigationBar: currentAppBar,
+          )
+        : Scaffold(
+            appBar: currentAppBar,
+            body: homeBodyWidget,
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat,
+            floatingActionButton: Platform.isIOS
+                ? Container()
+                : FloatingActionButton(
+                    child: Icon(Icons.add),
+                    onPressed: () => _startAddNewTransaction(context),
+                  ),
+          );
   }
 }
