@@ -98,26 +98,33 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  Widget buildMaterialNav(BuildContext context) {
+    return AppBar(
+      title: const Text('Personal Expenses'),
+      actions: [
+        IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => _startAddNewTransaction(context))
+      ],
+    );
+  }
+
+  Widget buildIOSNav(BuildContext context) {
+    return CupertinoNavigationBar(
+      middle: const Text('Personal Expenses'),
+      trailing: CupertinoButton(
+          child: const Icon(CupertinoIcons.add),
+          padding: EdgeInsets.zero,
+          onPressed: () => _startAddNewTransaction(context)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final isLandscape = mediaQuery.orientation == Orientation.landscape;
-    final PreferredSizeWidget currentAppBar = Platform.isIOS
-        ? CupertinoNavigationBar(
-            middle: Text('Personal Expenses'),
-            trailing: CupertinoButton(
-                child: Icon(CupertinoIcons.add),
-                padding: EdgeInsets.zero,
-                onPressed: () => _startAddNewTransaction(context)),
-          )
-        : AppBar(
-            title: Text('Personal Expenses'),
-            actions: [
-              IconButton(
-                  icon: Icon(Icons.add),
-                  onPressed: () => _startAddNewTransaction(context))
-            ],
-          );
+    final PreferredSizeWidget currentAppBar =
+        Platform.isIOS ? buildIOSNav(context) : buildMaterialNav(context);
     Widget transactionListWidget = Container(
         height: (mediaQuery.size.height -
                 mediaQuery.padding.top -
